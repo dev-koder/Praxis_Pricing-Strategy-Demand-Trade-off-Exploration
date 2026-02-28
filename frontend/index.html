@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PriceIQ — Demand Intelligence Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+    <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+    <script>
+        // Fallback: if Recharts failed to load from unpkg, try cdnjs
+        if (typeof Recharts === 'undefined') {
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.12.7/Recharts.min.js"><\/script>');
+        }
+    </script>
+    <style>
+        :root {
+            --bg: #04080F;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.07);
+            --blue: #3B82F6;
+            --gold: #F59E0B;
+            --cyan: #06B6D4;
+            --green: #10B981;
+            --red: #EF4444;
+            --purple: #8B5CF6;
+            --text-primary: #F1F5F9;
+            --text-secondary: #94A3B8;
+            --text-muted: #475569
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background: radial-gradient(ellipse 60% 50% at 10% 10%, rgba(59, 130, 246, .12), transparent), radial-gradient(ellipse 50% 40% at 90% 5%, rgba(139, 92, 246, .10), transparent), radial-gradient(ellipse 60% 40% at 50% 95%, rgba(6, 182, 212, .08), transparent)
+        }
+
+        .glass {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: all .3s ease
+        }
+
+        .glass:hover {
+            border-color: rgba(59, 130, 246, .2);
+            box-shadow: 0 0 30px rgba(59, 130, 246, .06)
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(24px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% center
+            }
+
+            100% {
+                background-position: 200% center
+            }
+        }
+
+        @keyframes dotPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1)
+            }
+
+            50% {
+                opacity: .5;
+                transform: scale(.8)
+            }
+        }
+
+        .animate-fadeInUp {
+            animation: fadeInUp .6s ease both
+        }
+
+        .stagger-1 {
+            animation-delay: .05s
+        }
+
+        .stagger-2 {
+            animation-delay: .1s
+        }
+
+        .stagger-3 {
+            animation-delay: .15s
+        }
+
+        .stagger-4 {
+            animation-delay: .2s
+        }
+
+        .stagger-5 {
+            animation-delay: .25s
+        }
+
+        .stagger-6 {
+            animation-delay: .3s
+        }
+
+        .stagger-7 {
+            animation-delay: .35s
+        }
+
+        .shimmer-btn {
+            background: linear-gradient(110deg, var(--blue) 0%, #60a5fa 40%, var(--blue) 60%, #60a5fa 100%);
+            background-size: 200% 100%;
+            animation: shimmer 3s linear infinite
+        }
+
+        .dot-pulse {
+            animation: dotPulse 1.5s ease-in-out infinite
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            outline: none;
+            background: linear-gradient(to right, var(--blue) var(--fill, 0%), rgba(255, 255, 255, .08) var(--fill, 0%))
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: var(--blue);
+            cursor: pointer;
+            box-shadow: 0 0 12px rgba(59, 130, 246, .6)
+        }
+
+        input[type=range]::-moz-range-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: var(--blue);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 12px rgba(59, 130, 246, .6)
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .1);
+            border-radius: 3px
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255, 255, 255, .03) 25%, rgba(255, 255, 255, .06) 50%, rgba(255, 255, 255, .03) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px
+        }
+
+        .label-xs {
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 600
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"><div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#94A3B8;font-size:14px">Loading PriceIQ... (requires JavaScript)</div></div>
+    <script>window.onerror=function(m,s,l,c,e){document.getElementById('root').innerHTML='<div style="padding:40px;color:#EF4444;font-family:monospace;font-size:13px"><h2 style="color:#F59E0B">PriceIQ Script Error</h2><p>'+m+'</p><p style="color:#94A3B8">Check browser console (F12) for details.</p></div>';}</script>
+    <script type="text/babel">
+        const { useState, useEffect, useCallback, useRef, useMemo } = React;
+        const { ResponsiveContainer, ComposedChart, AreaChart, Area, BarChart, Bar, ScatterChart, Scatter,
+            XAxis, YAxis, Tooltip, CartesianGrid, Legend, ReferenceLine, ReferenceArea, Cell,
+            LineChart, Line } = Recharts;
+
+        const API = window.location.origin;
+
+        /* ── Helpers ─────────────────────────────────────────────── */
+        const INR = v => v == null ? "—" : "₹" + Number(v).toLocaleString("en-IN", { maximumFractionDigits: 0 });
+        const fmt = (v, d = 0) => v == null ? "—" : Number(v).toLocaleString("en-IN", { maximumFractionDigits: d });
+        const pct = v => v == null ? "—" : (v * 100).toFixed(1) + "%";
+        const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+
+        /* Count-up hook */
+        function useCountUp(target, duration = 800) {
+            const [val, setVal] = useState(0); const raf = useRef(null);
+            useEffect(() => {
+                if (target == null) return; const t0 = performance.now(); const start = val; const delta = target - start;
+                function tick(now) { const p = Math.min((now - t0) / duration, 1); setVal(start + delta * p * p); if (p < 1) raf.current = requestAnimationFrame(tick); }
+                raf.current = requestAnimationFrame(tick); return () => cancelAnimationFrame(raf.current);
+            }, [target]);
+            return val;
+        }
+
+        /* Debounce hook */
+        function useDebounce(value, delay = 300) {
+            const [deb, setDeb] = useState(value);
+            useEffect(() => { const t = setTimeout(() => setDeb(value), delay); return () => clearTimeout(t) }, [value, delay]);
+            return deb;
+        }
+
+        /* Fetch helper */
+        async function api(path, opts = {}) {
+            try { const r = await fetch(API + path, { ...opts, headers: { "Content-Type": "application/json", ...(opts.headers || {}) } }); if (!r.ok) throw new Error(r.statusText); return await r.json(); }
+            catch (e) { console.warn("API error:", path, e); return null; }
+        }
+
+        /* ── Mock data (offline fallback) ────────────────────────── */
+        const MOCK_CATEGORIES = [
+            { item_type: "Electronics", avg_mrp: 2800, avg_price: 1400, avg_sales: 15000, avg_rating: 4.1, avg_discount: 0.45, count: 526, min_mrp: 100, max_mrp: 140000 },
+            { item_type: "Computers&Accessories", avg_mrp: 1200, avg_price: 600, avg_sales: 20000, avg_rating: 4.0, avg_discount: 0.42, count: 453, min_mrp: 50, max_mrp: 80000 },
+            { item_type: "Home&Kitchen", avg_mrp: 3500, avg_price: 1800, avg_sales: 12000, avg_rating: 4.0, avg_discount: 0.40, count: 448, min_mrp: 80, max_mrp: 50000 },
+            { item_type: "OfficeProducts", avg_mrp: 800, avg_price: 450, avg_sales: 8000, avg_rating: 3.9, avg_discount: 0.38, count: 31, min_mrp: 100, max_mrp: 10000 },
+        ];
+        const MOCK_OUTLETS = [
+            { outlet_type: "Cables&Accessories", avg_sales: 25000, avg_mrp: 800, avg_visibility: 0.55 },
+            { outlet_type: "HomeAppliances", avg_sales: 12000, avg_mrp: 5000, avg_visibility: 0.40 },
+            { outlet_type: "Wearables", avg_sales: 18000, avg_mrp: 3000, avg_visibility: 0.35 },
+            { outlet_type: "Audio", avg_sales: 22000, avg_mrp: 2500, avg_visibility: 0.50 },
+        ];
+        const MOCK_SEGMENTS = [
+            { segment: "Very Low", avg_sales: 25000 }, { segment: "Low", avg_sales: 18000 }, { segment: "Mid", avg_sales: 14000 }, { segment: "High", avg_sales: 9000 }, { segment: "Premium", avg_sales: 5000 }
+        ];
+        function mockDemandCurve() {
+            const pts = []; for (let p = 100; p <= 5000; p += 80) { const d = Math.max(500, 30000 - 5 * p + Math.random() * 2000); pts.push({ price: Math.round(p), demand: Math.round(d), revenue: Math.round(p * d), profit: Math.round((p - p * 0.4) * d) }); } return pts;
+        }
+        function mockSimulate(price) {
+            const d = Math.max(500, 30000 - 5 * price); const rev = price * d; const cost = price * 0.4; const prof = (price - cost) * d; const m = (price - cost) / price;
+            return {
+                predicted_demand: Math.round(d), revenue: Math.round(rev), profit: Math.round(prof), margin: Math.round(m * 1e4) / 1e4, elasticity: -0.72, optimal_price: 1400,
+                strategy: { headline: "You are 15% below optimal — revenue upside available.", insights: ["Margin of " + (m * 100).toFixed(1) + "% exceeds the 25% industry benchmark.", "Electronics shows moderate elasticity (ε = -0.72). Room to raise price.", "Moving price toward ₹1,400 could increase revenue by ~15%.", "Your price is competitive with the category average."], tags: ["#Underpriced", "#InelasticCategory", "#HealthyMargin"], recommendation: "Increase price toward ₹1,400 in a phased manner to capture additional revenue." }
+            };
+        }
+
+        /* ── Components ──────────────────────────────────────────── */
+        function KPICard({ label, value, prefix = "", suffix = "", accent, sparkData = [], delay = 0 }) {
+            const animated = useCountUp(value); const color = accent || "var(--blue)";
+            return (
+                <div className="glass p-5 animate-fadeInUp flex flex-col justify-between" style={{ animationDelay: delay + "s", minHeight: 140 }}>
+                    <p className="label-xs mb-1">{label}</p>
+                    <p className="text-3xl font-extrabold" style={{ color }}>{prefix}{fmt(animated, value != null && Math.abs(value) < 10 ? 2 : 0)}{suffix}</p>
+                    {sparkData.length > 1 && (
+                        <ResponsiveContainer width="100%" height={28}>
+                            <LineChart data={sparkData.map((v, i) => ({ v, i }))}>
+                                <Line type="monotone" dataKey="v" stroke={color} strokeWidth={1.5} dot={false} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    )}
+                </div>
+            );
+        }
+        function Skeleton({ h = 200 }) { return <div className="skeleton w-full" style={{ height: h }} /> }
+
+        /* ── Main App ────────────────────────────────────────────── */
+        function App() {
+            const [online, setOnline] = useState(null);
+            const [categories, setCategories] = useState([]);
+            const [outlets, setOutlets] = useState([]);
+            const [priceSegs, setPriceSegs] = useState([]);
+            const [topProds, setTopProds] = useState([]);
+            const [competitors, setCompetitors] = useState(null);
+
+            const [activeTab, setActiveTab] = useState("Electronics");
+            const [outletType, setOutletType] = useState("Online");
+            const [rating, setRating] = useState(4.0);
+            const [segment, setSegment] = useState("B2C");
+
+            const [price, setPrice] = useState(1400);
+            const [cost, setCost] = useState(560);
+
+            const [sim, setSim] = useState(null);
+            const [curve, setCurve] = useState([]);
+            const [loading, setLoading] = useState(true);
+
+            const [sparkHistory, setSparkHistory] = useState({ demand: [], revenue: [], margin: [], elasticity: [] });
+
+            const debouncedPrice = useDebounce(price, 300);
+
+            const catInfo = useMemo(() => categories.find(c => c.item_type === activeTab) || { min_mrp: 100, max_mrp: 10000, avg_price: 1400 }, [categories, activeTab]);
+            const mrpMin = catInfo.min_mrp || 100;
+            const mrpMax = Math.min(catInfo.max_mrp || 10000, 20000); // cap for slider usability
+
+            useEffect(() => {
+                (async () => {
+                    const h = await api("/api/health"); const isOnline = !!h; setOnline(isOnline);
+                    if (isOnline) {
+                        const [cats, outs, segs, top] = await Promise.all([api("/api/categories"), api("/api/outlets"), api("/api/price-segments"), api("/api/top-products")]);
+                        setCategories(cats || MOCK_CATEGORIES); setOutlets(outs || MOCK_OUTLETS); setPriceSegs(segs || MOCK_SEGMENTS); setTopProds(top || []);
+                    } else { setCategories(MOCK_CATEGORIES); setOutlets(MOCK_OUTLETS); setPriceSegs(MOCK_SEGMENTS); }
+                    setLoading(false);
+                })();
+            }, []);
+
+            // Simulate on param change
+            useEffect(() => {
+                if (loading) return;
+                (async () => {
+                    let result;
+                    if (online) {
+                        result = await api("/api/simulate", { method: "POST", body: JSON.stringify({ price: debouncedPrice, rating, item_type: activeTab, outlet_type: outletType, cost, segment }) });
+                    }
+                    if (!result) result = mockSimulate(debouncedPrice);
+                    setSim(result);
+                    setSparkHistory(prev => ({
+                        demand: [...prev.demand.slice(-6), result.predicted_demand],
+                        revenue: [...prev.revenue.slice(-6), result.revenue],
+                        margin: [...prev.margin.slice(-6), result.margin * 100],
+                        elasticity: [...prev.elasticity.slice(-6), result.elasticity],
+                    }));
+                })();
+            }, [debouncedPrice, rating, activeTab, outletType, cost, segment, loading, online]);
+
+            // Demand curve + competitors
+            useEffect(() => {
+                if (loading) return;
+                (async () => {
+                    if (online) {
+                        const [c, comp] = await Promise.all([
+                            api(`/api/demand-curve?item_type=${encodeURIComponent(activeTab)}&rating=${rating}&cost=${cost}`),
+                            api(`/api/competitors?item_type=${encodeURIComponent(activeTab)}`),
+                        ]);
+                        setCurve(c || mockDemandCurve()); setCompetitors(comp || null);
+                    } else { setCurve(mockDemandCurve()); }
+                })();
+            }, [activeTab, rating, cost, loading, online]);
+
+            // Update price on category change
+            useEffect(() => {
+                if (categories.length) {
+                    const c = categories.find(x => x.item_type === activeTab);
+                    if (c) { setPrice(Math.round(c.avg_price || c.avg_mrp)); setCost(Math.round((c.avg_price || c.avg_mrp) * 0.4)); }
+                }
+            }, [activeTab, categories]);
+
+            const sliderFill = ((price - mrpMin) / (mrpMax - mrpMin)) * 100;
+            const optimalPrice = sim?.optimal_price || 1400;
+            const optimalFill = clamp(((optimalPrice - mrpMin) / (mrpMax - mrpMin)) * 100, 0, 100);
+
+            const topTabs = useMemo(() => {
+                if (!categories.length) return ["Electronics", "Computers&Accessories", "Home&Kitchen"];
+                return categories.sort((a, b) => b.count - a.count).slice(0, 6).map(c => c.item_type);
+            }, [categories]);
+
+            return (
+                <div className="relative z-10 min-h-screen flex flex-col">
+                    {/* HEADER */}
+                    <header className="sticky top-0 z-50 glass border-b border-white/5 px-6 py-3 flex items-center justify-between" style={{ background: "rgba(4,8,15,.85)", backdropFilter: "blur(16px)" }}>
+                        <div className="flex items-center gap-3">
+                            <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 2L17 10H26L19 15.5L21.5 24L14 18.5L6.5 24L9 15.5L2 10H11L14 2Z" fill="#3B82F6" /></svg>
+                            <div>
+                                <span className="text-lg font-bold text-white">Price<span style={{ color: "var(--blue)" }}>IQ</span></span>
+                                <span className="hidden sm:inline text-xs text-slate-500 ml-3">Demand Intelligence Platform</span>
+                            </div>
+                        </div>
+                        <div className="hidden md:flex items-center gap-1.5 overflow-x-auto max-w-[650px]">
+                            {topTabs.map(t => (
+                                <button key={t} onClick={() => setActiveTab(t)}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${activeTab === t ? "text-white" : "text-slate-400 hover:text-white hover:bg-white/5"}`}
+                                    style={activeTab === t ? { background: "var(--blue)" } : {}}>
+                                    {t}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <span className="hidden lg:block text-xs text-slate-500">Amazon India · 1,465 products</span>
+                            <span className="flex items-center gap-1.5 text-xs text-green-400">
+                                <span className="w-2 h-2 rounded-full bg-green-400 dot-pulse inline-block"></span>
+                                {online === false ? "Offline Mode" : "Live Model"}
+                            </span>
+                        </div>
+                    </header>
+
+                    {online === false && (
+                        <div className="bg-amber-900/30 border-b border-amber-700/30 text-amber-300 text-center text-xs py-1.5">
+                            Backend offline — using demo mode with mock data
+                        </div>
+                    )}
+
+                    {/* KPI STRIP */}
+                    <section className="px-6 pt-5 grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <KPICard label="PREDICTED DEMAND" value={sim?.predicted_demand} accent="var(--gold)" delay={0} sparkData={sparkHistory.demand} />
+                        <KPICard label="PROJECTED REVENUE" value={sim?.revenue} prefix="₹" accent="var(--cyan)" delay={.05} sparkData={sparkHistory.revenue} />
+                        <KPICard label="PROFIT MARGIN" value={sim ? sim.margin * 100 : null} suffix="%" accent={sim && sim.margin >= .25 ? "var(--green)" : sim && sim.margin >= .15 ? "var(--gold)" : "var(--red)"} delay={.1} sparkData={sparkHistory.margin} />
+                        <KPICard label="PRICE ELASTICITY" value={sim?.elasticity} accent="var(--purple)" delay={.15} sparkData={sparkHistory.elasticity} />
+                    </section>
+
+                    {/* MAIN BODY */}
+                    <main className="flex-1 flex flex-col lg:flex-row gap-5 px-6 py-5 overflow-hidden">
+
+                        {/* LEFT PANEL */}
+                        <aside className="lg:w-[380px] flex-shrink-0 flex flex-col gap-4 lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto pr-1">
+
+                            {/* Price display */}
+                            <div className="glass p-5 animate-fadeInUp stagger-1 text-center">
+                                <p className="label-xs mb-1">SELLING PRICE</p>
+                                <p className="text-5xl font-black" style={{ color: "var(--blue)" }}>{INR(price)}</p>
+                                <div className="flex justify-center gap-4 mt-3 text-xs text-slate-400">
+                                    <span>Rev: {INR(sim?.revenue)}</span>
+                                    <span>Demand: {fmt(sim?.predicted_demand)}</span>
+                                    <span>Margin: {pct(sim?.margin)}</span>
+                                </div>
+                            </div>
+
+                            {/* Category selector (mobile) */}
+                            <div className="glass p-4 animate-fadeInUp stagger-2 md:hidden">
+                                <p className="label-xs mb-2">CATEGORY</p>
+                                <select value={activeTab} onChange={e => setActiveTab(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                                    {categories.map(c => <option key={c.item_type} value={c.item_type}>{c.item_type}</option>)}
+                                </select>
+                            </div>
+
+                            {/* Controls */}
+                            <div className="glass p-4 animate-fadeInUp stagger-2 grid grid-cols-2 gap-3">
+                                <div>
+                                    <p className="label-xs mb-1">CHANNEL</p>
+                                    <select value={outletType} onChange={e => setOutletType(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white">
+                                        {["Online", "Marketplace", "D2C", "Retail"].map(o => <option key={o} value={o}>{o}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <p className="label-xs mb-1">COST (₹)</p>
+                                    <input type="number" value={cost} onChange={e => setCost(Number(e.target.value))} className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white" min={1} />
+                                </div>
+                                <div>
+                                    <p className="label-xs mb-1">RATING</p>
+                                    <input type="number" value={rating} min={1} max={5} step={0.1} onChange={e => setRating(Number(e.target.value))} className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white" />
+                                </div>
+                                <div>
+                                    <p className="label-xs mb-1">SEGMENT</p>
+                                    <div className="flex gap-1">
+                                        {["B2C", "B2B", "Premium"].map(s => (
+                                            <button key={s} onClick={() => setSegment(s)}
+                                                className={`flex-1 py-1 rounded-lg text-[10px] font-semibold transition-all ${segment === s ? "text-white" : "text-slate-400 hover:text-white"}`}
+                                                style={segment === s ? { background: "var(--blue)" } : { background: "rgba(255,255,255,0.03)" }}>
+                                                {s}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Price slider */}
+                            <div className="glass p-5 animate-fadeInUp stagger-3">
+                                <p className="label-xs mb-3">PRICE CONTROL</p>
+                                <div className="relative mb-2">
+                                    <div className="absolute -top-5 text-yellow-400 text-xs font-bold" style={{ left: `calc(${clamp(optimalFill, 2, 98)}% - 8px)` }}>★</div>
+                                    <input type="range" min={mrpMin} max={mrpMax} step={1} value={price}
+                                        onChange={e => setPrice(Number(e.target.value))} style={{ "--fill": clamp(sliderFill, 0, 100) + "%" }} />
+                                </div>
+                                <div className="flex justify-between text-[10px] text-slate-500">
+                                    <span>Min {INR(mrpMin)}</span>
+                                    <span className="text-yellow-400 font-bold">★ Optimal {INR(optimalPrice)}</span>
+                                    <span>Max {INR(mrpMax)}</span>
+                                </div>
+                            </div>
+
+                            {/* Run Simulation */}
+                            <button onClick={() => { setPrice(p => p + 1); setTimeout(() => setPrice(p => p - 1), 50); }}
+                                className="shimmer-btn text-white font-bold py-3 rounded-xl text-sm animate-fadeInUp stagger-5 hover:scale-[1.02] transition-transform">
+                                ⚡ Run Simulation
+                            </button>
+
+                            {/* AI Strategy */}
+                            {sim?.strategy && (
+                                <div className="glass p-5 animate-fadeInUp stagger-6 border-l-4" style={{ borderLeftColor: "var(--blue)", background: "linear-gradient(135deg,rgba(59,130,246,.06),rgba(139,92,246,.04))" }}>
+                                    <p className="label-xs mb-2 flex items-center gap-2">🤖 GENAI STRATEGY INSIGHTS</p>
+                                    <p className="text-sm font-bold text-white mb-3">{sim.strategy.headline}</p>
+                                    <ul className="space-y-2 mb-4">
+                                        {sim.strategy.insights?.map((ins, i) => (
+                                            <li key={i} className="text-xs text-slate-300 border-b border-white/5 pb-2 last:border-0">{ins}</li>
+                                        ))}
+                                    </ul>
+                                    <div className="flex flex-wrap gap-1.5 mb-3">
+                                        {sim.strategy.tags?.map((t, i) => (
+                                            <span key={i} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-500/15 text-blue-300 border border-blue-500/20">{t}</span>
+                                        ))}
+                                    </div>
+                                    <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3 text-xs text-indigo-200">
+                                        💡 {sim.strategy.recommendation}
+                                    </div>
+                                </div>
+                            )}
+                        </aside>
+
+                        {/* RIGHT CHARTS */}
+                        <section className="flex-1 flex flex-col gap-5 overflow-y-auto pb-6">
+
+                            {/* Chart 1 — Demand & Revenue Curve */}
+                            <div className="glass p-5 animate-fadeInUp stagger-2">
+                                <p className="label-xs mb-4">DEMAND & REVENUE CURVE</p>
+                                {curve.length ? (
+                                    <ResponsiveContainer width="100%" height={320}>
+                                        <ComposedChart data={curve} margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                                            <defs>
+                                                <linearGradient id="gDemand" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#06B6D4" stopOpacity={.5} /><stop offset="100%" stopColor="#06B6D4" stopOpacity={.02} /></linearGradient>
+                                                <linearGradient id="gRevenue" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#F59E0B" stopOpacity={.4} /><stop offset="100%" stopColor="#F59E0B" stopOpacity={.02} /></linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.04)" />
+                                            <XAxis dataKey="price" tick={{ fill: "#64748b", fontSize: 10 }} tickFormatter={v => "₹" + v.toLocaleString("en-IN")} stroke="rgba(255,255,255,.06)" />
+                                            <YAxis yAxisId="left" tick={{ fill: "#06B6D4", fontSize: 10 }} stroke="rgba(255,255,255,.06)" />
+                                            <YAxis yAxisId="right" orientation="right" tick={{ fill: "#F59E0B", fontSize: 10 }} stroke="rgba(255,255,255,.06)" />
+                                            <Tooltip contentStyle={{ background: "rgba(4,8,15,.95)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 12, fontSize: 12 }} labelFormatter={v => "Price: ₹" + Number(v).toLocaleString("en-IN")} />
+                                            <Area yAxisId="left" type="monotone" dataKey="demand" fill="url(#gDemand)" stroke="#06B6D4" strokeWidth={2} name="Demand" />
+                                            <Area yAxisId="right" type="monotone" dataKey="revenue" fill="url(#gRevenue)" stroke="#F59E0B" strokeWidth={2} name="Revenue" />
+                                            <Line yAxisId="right" type="monotone" dataKey="profit" stroke="#10B981" strokeWidth={1.5} strokeDasharray="4 4" dot={false} name="Profit" />
+                                            <ReferenceLine yAxisId="left" x={price} stroke="#3B82F6" strokeWidth={2} label={{ value: "You", fill: "#3B82F6", fontSize: 11, position: "top" }} />
+                                            <ReferenceLine yAxisId="left" x={optimalPrice} stroke="#F59E0B" strokeWidth={1.5} strokeDasharray="6 3" label={{ value: "★ Optimal", fill: "#F59E0B", fontSize: 10, position: "top" }} />
+                                        </ComposedChart>
+                                    </ResponsiveContainer>
+                                ) : <Skeleton h={320} />}
+                            </div>
+
+                            {/* Chart 2 — Revenue Sweet Spot */}
+                            <div className="glass p-5 animate-fadeInUp stagger-3">
+                                <p className="label-xs mb-4">REVENUE SWEET SPOT</p>
+                                {curve.length ? (
+                                    <>
+                                        <ResponsiveContainer width="100%" height={220}>
+                                            <AreaChart data={curve} margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                                                <defs>
+                                                    <linearGradient id="gRevOnly" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#F59E0B" stopOpacity={.5} /><stop offset="100%" stopColor="#F59E0B" stopOpacity={.02} /></linearGradient>
+                                                </defs>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.04)" />
+                                                <XAxis dataKey="price" tick={{ fill: "#64748b", fontSize: 10 }} tickFormatter={v => "₹" + Number(v).toLocaleString("en-IN")} stroke="rgba(255,255,255,.06)" />
+                                                <YAxis tick={{ fill: "#F59E0B", fontSize: 10 }} stroke="rgba(255,255,255,.06)" />
+                                                <Tooltip contentStyle={{ background: "rgba(4,8,15,.95)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 12, fontSize: 12 }} />
+                                                <Area type="monotone" dataKey="revenue" fill="url(#gRevOnly)" stroke="#F59E0B" strokeWidth={2} />
+                                                <ReferenceLine x={price} stroke="#3B82F6" strokeWidth={2} />
+                                                <ReferenceLine x={optimalPrice} stroke="#F59E0B" strokeWidth={1.5} strokeDasharray="6 3" />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                        <div className="grid grid-cols-3 gap-3 mt-3">
+                                            <div className="bg-white/[.03] rounded-lg p-3 text-center">
+                                                <p className="label-xs mb-1">GAP TO OPTIMAL</p>
+                                                <p className="text-lg font-bold" style={{ color: optimalPrice > price ? "var(--gold)" : "var(--green)" }}>{INR(Math.abs(optimalPrice - price))}</p>
+                                            </div>
+                                            <div className="bg-white/[.03] rounded-lg p-3 text-center">
+                                                <p className="label-xs mb-1">REVENUE AT OPTIMAL</p>
+                                                <p className="text-lg font-bold text-amber-400">{INR(curve.find(c => Math.abs(c.price - optimalPrice) < (mrpMax / 60))?.revenue)}</p>
+                                            </div>
+                                            <div className="bg-white/[.03] rounded-lg p-3 text-center">
+                                                <p className="label-xs mb-1">UPLIFT POTENTIAL</p>
+                                                <p className="text-lg font-bold text-emerald-400">{sim && sim.revenue > 0 ? ((sim.optimal_price * (sim.predicted_demand) - sim.revenue) / sim.revenue * 100).toFixed(1) : "0"}%</p>
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : <Skeleton h={280} />}
+                            </div>
+
+                            {/* Chart 3 — Category Analysis */}
+                            <div className="glass p-5 animate-fadeInUp stagger-4">
+                                <p className="label-xs mb-4">CATEGORY: AVG PRICE vs AVG DEMAND</p>
+                                {categories.length ? (
+                                    <ResponsiveContainer width="100%" height={280}>
+                                        <ScatterChart margin={{ top: 10, right: 30, bottom: 10, left: 10 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.04)" />
+                                            <XAxis dataKey="avg_price" name="Avg Price" tick={{ fill: "#64748b", fontSize: 10 }} tickFormatter={v => "₹" + Number(v).toLocaleString("en-IN")} stroke="rgba(255,255,255,.06)" />
+                                            <YAxis dataKey="avg_sales" name="Avg Demand" tick={{ fill: "#64748b", fontSize: 10 }} stroke="rgba(255,255,255,.06)" />
+                                            <Tooltip contentStyle={{ background: "rgba(4,8,15,.95)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 12, fontSize: 12 }} formatter={(v, n) => [n === "avg_price" ? "₹" + Number(v).toLocaleString("en-IN") : Number(v).toLocaleString("en-IN"), n === "avg_price" ? "Avg Price" : "Avg Demand"]} />
+                                            <Scatter data={categories} fill="#3B82F6">
+                                                {categories.map((c, i) => <Cell key={i} fill={c.item_type === activeTab ? "#3B82F6" : "#64748b"} />)}
+                                            </Scatter>
+                                        </ScatterChart>
+                                    </ResponsiveContainer>
+                                ) : <Skeleton h={280} />}
+                                {categories.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {categories.map(c => (
+                                            <span key={c.item_type} className={`text-[10px] px-2 py-0.5 rounded-full cursor-pointer ${c.item_type === activeTab ? "bg-blue-500/20 text-blue-300" : "bg-white/5 text-slate-500"}`}
+                                                onClick={() => setActiveTab(c.item_type)}>{c.item_type} ({c.count})</span>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Chart 4 — Sub-Category Comparison */}
+                            <div className="glass p-5 animate-fadeInUp stagger-5">
+                                <p className="label-xs mb-4">SUB-CATEGORY PERFORMANCE</p>
+                                {outlets.length ? (
+                                    <ResponsiveContainer width="100%" height={260}>
+                                        <BarChart data={outlets} margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.04)" />
+                                            <XAxis dataKey="outlet_type" tick={{ fill: "#64748b", fontSize: 9 }} stroke="rgba(255,255,255,.06)" />
+                                            <YAxis tick={{ fill: "#64748b", fontSize: 10 }} stroke="rgba(255,255,255,.06)" />
+                                            <Tooltip contentStyle={{ background: "rgba(4,8,15,.95)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 12, fontSize: 12 }} />
+                                            <Bar dataKey="avg_sales" name="Avg Demand" fill="#F59E0B" radius={[4, 4, 0, 0]} />
+                                            <Bar dataKey="avg_mrp" name="Avg MRP" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                ) : <Skeleton h={260} />}
+                            </div>
+
+                            {/* Chart 5 — Price Tier Distribution */}
+                            <div className="glass p-5 animate-fadeInUp stagger-6">
+                                <p className="label-xs mb-4">PRICE TIER DEMAND DISTRIBUTION</p>
+                                {priceSegs.length ? (
+                                    <ResponsiveContainer width="100%" height={220}>
+                                        <AreaChart data={priceSegs} margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                                            <defs>
+                                                <linearGradient id="gTier" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#3B82F6" stopOpacity={.5} /><stop offset="100%" stopColor="#3B82F6" stopOpacity={.02} /></linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.04)" />
+                                            <XAxis dataKey="segment" tick={{ fill: "#64748b", fontSize: 10 }} stroke="rgba(255,255,255,.06)" />
+                                            <YAxis tick={{ fill: "#64748b", fontSize: 10 }} stroke="rgba(255,255,255,.06)" />
+                                            <Tooltip contentStyle={{ background: "rgba(4,8,15,.95)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 12, fontSize: 12 }} />
+                                            <Area type="monotone" dataKey="avg_sales" fill="url(#gTier)" stroke="#3B82F6" strokeWidth={2} />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                ) : <Skeleton h={220} />}
+                            </div>
+
+                            {/* Chart 6 — Competitor Positioning */}
+                            <div className="glass p-5 animate-fadeInUp stagger-7">
+                                <p className="label-xs mb-4">COMPETITOR POSITIONING — {activeTab.toUpperCase()}</p>
+                                {(() => {
+                                    const comps = competitors?.competitors || [
+                                        { name: "ValueMart", price: 800, market_share: 22 }, { name: "FlipDeals", price: 1100, market_share: 18 }, { name: "PrimeBuy", price: 1600, market_share: 28 }, { name: "QuickShop", price: 2000, market_share: 12 }
+                                    ];
+                                    const scatterData = [...comps, { name: "YOU", price: price, market_share: 20 }];
+                                    return (
+                                        <ResponsiveContainer width="100%" height={280}>
+                                            <ScatterChart margin={{ top: 20, right: 30, bottom: 10, left: 10 }}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.04)" />
+                                                <XAxis dataKey="price" name="Price" tick={{ fill: "#64748b", fontSize: 10 }} tickFormatter={v => "₹" + Number(v).toLocaleString("en-IN")} stroke="rgba(255,255,255,.06)" label={{ value: "Price →", position: "insideBottom", fill: "#475569", fontSize: 10, offset: -5 }} />
+                                                <YAxis dataKey="market_share" name="Market Share" tick={{ fill: "#64748b", fontSize: 10 }} stroke="rgba(255,255,255,.06)" label={{ value: "Share % →", angle: -90, position: "insideLeft", fill: "#475569", fontSize: 10 }} />
+                                                <Tooltip contentStyle={{ background: "rgba(4,8,15,.95)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 12, fontSize: 12 }} formatter={(v, n) => [n === "price" ? "₹" + Number(v).toLocaleString("en-IN") : v + "%", n === "price" ? "Price" : "Share"]} />
+                                                <Scatter data={scatterData} fill="#06B6D4">
+                                                    {scatterData.map((d, i) => <Cell key={i} fill={d.name === "YOU" ? "#3B82F6" : "#06B6D4"} r={d.name === "YOU" ? 10 : 6} />)}
+                                                </Scatter>
+                                            </ScatterChart>
+                                        </ResponsiveContainer>
+                                    );
+                                })()}
+                                <div className="grid grid-cols-4 gap-2 mt-2 text-[10px] text-slate-500 text-center">
+                                    <span>💰 Value Leader</span><span>🏆 Premium</span><span>📦 Budget</span><span>⚠️ Overpriced</span>
+                                </div>
+                            </div>
+
+                        </section>
+                    </main>
+
+                    <footer className="text-center text-xs text-slate-600 py-3 border-t border-white/5">
+                        PriceIQ · Praxis 2.0 · GDG GB Pant · Built with FastAPI + React + Recharts + Random Forest
+                    </footer>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+</body>
+
+</html>
